@@ -218,6 +218,19 @@ const App: React.FC = () => {
       {isMapVisible && (
         <div className="flex-1 relative h-[50vh] md:h-full bg-black overflow-hidden">
           <KakaoMap query={activeMapQuery} />
+          {/* Fallback: Google Maps iframe (카카오맵 실패 시 표시) */}
+          <iframe
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            style={{ border: 0, position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+            src={`https://www.google.com/maps?q=${encodeURIComponent(activeMapQuery)}&hl=ko&z=15&output=embed`}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Google Maps"
+            className="w-full h-full"
+          ></iframe>
           
           {/* 지도 상단 정보 오버레이 (다크 윈터 스타일) */}
           <div className="absolute top-6 left-6 right-6 md:right-auto md:min-w-[320px] z-30">

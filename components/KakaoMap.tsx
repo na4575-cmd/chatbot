@@ -68,7 +68,19 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
 
         script.onerror = (e) => {
           console.error('카카오맵 스크립트 로드 실패:', e);
-          reject(new Error('카카오맵 스크립트를 로드할 수 없습니다. 네트워크 연결과 API 키를 확인해주세요.'));
+          const errorMsg = `카카오맵 스크립트를 로드할 수 없습니다.
+          
+가능한 원인:
+1. API 키가 잘못되었거나 비활성화됨
+2. 현재 도메인이 카카오 개발자 콘솔에 등록되지 않음
+3. 네트워크 연결 문제
+
+해결 방법:
+- https://developers.kakao.com 접속
+- 내 애플리케이션 → 앱 설정 → 플랫폼
+- Web 플랫폼에 현재 도메인 추가
+  예: localhost:3001, *.vercel.app, 실제 배포 도메인`;
+          reject(new Error(errorMsg));
         };
 
         document.head.appendChild(script);
@@ -178,6 +190,8 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
         height: '100%',
         minHeight: '400px',
         backgroundColor: '#1a1a1a',
+        position: 'relative',
+        zIndex: isLoaded ? 10 : error ? 2 : 1,
       }}
     >
       {!isLoaded && !error && (
@@ -205,14 +219,43 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
           padding: '20px',
           textAlign: 'center',
           gap: '10px',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1,
+          pointerEvents: 'none',
         }}>
-          <div style={{ fontSize: '16px', fontWeight: 'bold' }}>지도 로드 실패</div>
-          <div style={{ fontSize: '12px', color: '#aaa' }}>{error}</div>
-          <div style={{ fontSize: '11px', color: '#666', marginTop: '10px', lineHeight: '1.5' }}>
-            <div>카카오 개발자 콘솔에서 확인:</div>
-            <div>1. API 키가 활성화되어 있는지</div>
-            <div>2. 플랫폼 설정에 현재 도메인이 등록되어 있는지</div>
-            <div>3. JavaScript 키가 올바른지</div>
+          <div style={{ 
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            padding: '20px',
+            borderRadius: '12px',
+            maxWidth: '500px',
+            pointerEvents: 'auto',
+          }}>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>카카오맵 로드 실패</div>
+            <div style={{ fontSize: '12px', color: '#aaa', whiteSpace: 'pre-line', marginBottom: '15px' }}>{error}</div>
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#666', 
+              lineHeight: '1.5',
+              padding: '15px',
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              borderRadius: '8px',
+              textAlign: 'left'
+            }}>
+              <div style={{ marginBottom: '8px', fontWeight: 'bold', color: '#fff' }}>해결 방법:</div>
+              <div>1. https://developers.kakao.com 접속</div>
+              <div>2. 내 애플리케이션 → 앱 설정 → 플랫폼</div>
+              <div>3. Web 플랫폼 등록 및 도메인 추가</div>
+              <div style={{ marginTop: '8px', fontSize: '10px', color: '#888' }}>
+                현재 도메인: {window.location.hostname}
+              </div>
+              <div style={{ marginTop: '10px', fontSize: '10px', color: '#aaa', fontStyle: 'italic' }}>
+                현재는 Google Maps가 표시됩니다.
+              </div>
+            </div>
           </div>
         </div>
       )}
