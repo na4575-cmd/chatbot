@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Message, GroundingSource } from './types';
 import { RECOMMENDED_AREAS } from './constants';
 import { getGeminiResponse } from './services/geminiService';
-import KakaoMap from './components/KakaoMap';
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -214,16 +213,14 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* 오른쪽: 카카오맵 */}
+      {/* 오른쪽: Google Maps */}
       {isMapVisible && (
         <div className="flex-1 relative h-[50vh] md:h-full bg-black overflow-hidden">
-          <KakaoMap query={activeMapQuery} />
-          {/* Fallback: Google Maps iframe (카카오맵 실패 시 표시) */}
           <iframe
             width="100%"
             height="100%"
             frameBorder="0"
-            style={{ border: 0, position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+            style={{ border: 0 }}
             src={`https://www.google.com/maps?q=${encodeURIComponent(activeMapQuery)}&hl=ko&z=15&output=embed`}
             allowFullScreen
             loading="lazy"
