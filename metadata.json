@@ -1,0 +1,8 @@
+
+{
+  "name": "Sejong City Guide AI",
+  "description": "An intelligent chatbot assistant dedicated to introducing the various districts, landmarks, and attractions of Sejong City, South Korea, using Google Search grounding for real-time accuracy.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
