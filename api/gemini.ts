@@ -43,7 +43,11 @@ export default async function handler(
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not set');
-      return res.status(500).json({ error: 'API key not configured' });
+      console.error('Available env vars:', Object.keys(process.env).filter(key => key.includes('GEMINI') || key.includes('API')));
+      return res.status(500).json({ 
+        error: 'API key not configured',
+        message: 'GEMINI_API_KEY environment variable is missing. Please set it in Vercel dashboard.'
+      });
     }
 
     const ai = new GoogleGenAI({ apiKey });
