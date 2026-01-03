@@ -51,7 +51,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
         // 새 스크립트 태그 생성
         const script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=becaf5394d406c2bbc502ee6f8dc2e70&libraries=services';
+        script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=930bc92bdb16b055fc72e025edccf8ff&libraries=services';
         script.async = true;
 
         script.onload = () => {
