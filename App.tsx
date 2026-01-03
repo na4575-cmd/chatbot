@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Message, GroundingSource } from './types';
 import { RECOMMENDED_AREAS } from './constants';
 import { getGeminiResponse } from './services/geminiService';
+import KakaoMap from './components/KakaoMap';
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -85,8 +86,6 @@ const App: React.FC = () => {
     e.preventDefault();
     handleSendMessage(inputText);
   };
-
-  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(activeMapQuery)}&hl=ko&z=15&output=embed`;
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-black overflow-hidden font-['Pretendard'] relative">
@@ -215,21 +214,10 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* 오른쪽: 구글 지도 (필터 제거하여 원본 유지) */}
+      {/* 오른쪽: 카카오맵 */}
       {isMapVisible && (
         <div className="flex-1 relative h-[50vh] md:h-full bg-black overflow-hidden">
-          <iframe
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            style={{ border: 0 }}
-            src={mapUrl}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Google Maps"
-            className="w-full h-full"
-          ></iframe>
+          <KakaoMap query={activeMapQuery} />
           
           {/* 지도 상단 정보 오버레이 (다크 윈터 스타일) */}
           <div className="absolute top-6 left-6 right-6 md:right-auto md:min-w-[320px] z-30">
