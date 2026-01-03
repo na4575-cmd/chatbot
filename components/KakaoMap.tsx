@@ -60,21 +60,20 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
           protocol: window.location.protocol
         });
 
-        // 먼저 fetch로 스크립트가 접근 가능한지 확인
-        fetch(scriptUrl, { method: 'HEAD', mode: 'no-cors' })
-          .then(() => {
-            console.log('카카오맵 스크립트 URL 접근 가능');
-          })
-          .catch((err) => {
-            console.warn('카카오맵 스크립트 URL 접근 확인 실패 (정상일 수 있음):', err);
-          });
+        // 스크립트 로드 전에 URL 유효성 확인 (디버깅용)
+        console.log('카카오맵 스크립트 로드 준비:', {
+          scriptUrl,
+          currentOrigin,
+          registeredDomain: 'https://chatbot-mocha-delta-42.vercel.app',
+          match: currentOrigin === 'https://chatbot-mocha-delta-42.vercel.app'
+        });
 
         // 새 스크립트 태그 생성
         const script = document.createElement('script');
         script.type = 'text/javascript';
         script.src = scriptUrl;
         script.async = true;
-        script.crossOrigin = 'anonymous';
+        // crossOrigin 제거 - 카카오맵은 crossOrigin이 필요 없을 수 있음
 
         script.onload = () => {
           console.log('카카오맵 스크립트 로드 완료');
@@ -89,34 +88,51 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
         };
 
         script.onerror = (e) => {
-          console.error('카카오맵 스크립트 로드 실패:', {
+          // Network 탭에서 확인할 수 있도록 상세 정보 로깅
+          console.error('카카오맵 스크립트 로드 실패 - 상세 정보:', {
             event: e,
+            eventType: e.type,
+            eventTarget: e.target,
+            scriptSrc: (e.target as HTMLScriptElement)?.src,
             url: scriptUrl,
             domain: currentDomain,
             origin: currentOrigin,
-            userAgent: navigator.userAgent
+            fullUrl: window.location.href,
+            userAgent: navigator.userAgent.substring(0, 100)
           });
+          
+          // Network 탭 확인 안내
+          console.error('디버깅 방법:');
+          console.error('1. F12 → Network 탭 열기');
+          console.error('2. 페이지 새로고침');
+          console.error('3. "dapi.kakao.com" 요청 찾기');
+          console.error('4. 상태 코드 확인 (403 = 도메인 미등록, 404 = API 키 오류)');
+          console.error('5. Response 탭에서 에러 메시지 확인');
           
           const errorMsg = `카카오맵 스크립트를 로드할 수 없습니다.
 
 현재 도메인: ${currentOrigin}
+등록된 도메인: https://chatbot-mocha-delta-42.vercel.app
 API 키: 930bc92bdb16b055fc72e025edccf8ff
 
-가능한 원인:
-1. API 키가 잘못되었거나 비활성화됨
-2. 현재 도메인이 카카오 개발자 콘솔에 정확히 등록되지 않음
-   - 등록된 도메인: ${currentOrigin} (정확히 일치해야 함)
-   - http와 https는 별도로 등록 필요
-   - 포트 번호가 있으면 포함해서 등록
-3. 네트워크 연결 문제
+⚠️ 중요 확인사항:
+1. Network 탭(F12)에서 dapi.kakao.com 요청의 상태 코드 확인
+   - 403: 도메인 미등록 또는 API 키 문제
+   - 404: API 키 오류
+   - 기타: 네트워크 문제
 
-해결 방법:
-- https://developers.kakao.com 접속
-- 내 애플리케이션 → 앱 설정 → 플랫폼
-- Web 플랫폼에 다음 도메인을 정확히 추가:
-  ${currentOrigin}
-  ${currentDomain}
-  ${window.location.protocol}//${currentDomain}${window.location.port ? ':' + window.location.port : ''}`;
+2. 도메인 등록 확인:
+   - 등록된 도메인과 현재 도메인이 정확히 일치해야 함
+   - https://chatbot-mocha-delta-42.vercel.app
+   - 현재: ${currentOrigin}
+   - 일치 여부: ${currentOrigin === 'https://chatbot-mocha-delta-42.vercel.app' ? '✅ 일치' : '❌ 불일치'}
+
+3. 도메인 등록 후 적용 시간:
+   - 변경 사항이 즉시 적용되지 않을 수 있음
+   - 몇 분 후 다시 시도하거나 브라우저 캐시 삭제
+
+4. API 키 확인:
+   - 카카오 개발자 콘솔에서 JavaScript 키가 활성화되어 있는지 확인`;
           reject(new Error(errorMsg));
         };
 
