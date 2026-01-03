@@ -48,11 +48,33 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
           return;
         }
 
+        // 스크립트 URL
+        const scriptUrl = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=930bc92bdb16b055fc72e025edccf8ff&libraries=services';
+        const currentDomain = window.location.hostname;
+        const currentOrigin = window.location.origin;
+
+        console.log('카카오맵 스크립트 로드 시도:', {
+          url: scriptUrl,
+          domain: currentDomain,
+          origin: currentOrigin,
+          protocol: window.location.protocol
+        });
+
+        // 먼저 fetch로 스크립트가 접근 가능한지 확인
+        fetch(scriptUrl, { method: 'HEAD', mode: 'no-cors' })
+          .then(() => {
+            console.log('카카오맵 스크립트 URL 접근 가능');
+          })
+          .catch((err) => {
+            console.warn('카카오맵 스크립트 URL 접근 확인 실패 (정상일 수 있음):', err);
+          });
+
         // 새 스크립트 태그 생성
         const script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=930bc92bdb16b055fc72e025edccf8ff&libraries=services';
+        script.src = scriptUrl;
         script.async = true;
+        script.crossOrigin = 'anonymous';
 
         script.onload = () => {
           console.log('카카오맵 스크립트 로드 완료');
@@ -67,19 +89,34 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
         };
 
         script.onerror = (e) => {
-          console.error('카카오맵 스크립트 로드 실패:', e);
-          const errorMsg = `카카오맵 스크립트를 로드할 수 없습니다.
+          console.error('카카오맵 스크립트 로드 실패:', {
+            event: e,
+            url: scriptUrl,
+            domain: currentDomain,
+            origin: currentOrigin,
+            userAgent: navigator.userAgent
+          });
           
+          const errorMsg = `카카오맵 스크립트를 로드할 수 없습니다.
+
+현재 도메인: ${currentOrigin}
+API 키: 930bc92bdb16b055fc72e025edccf8ff
+
 가능한 원인:
 1. API 키가 잘못되었거나 비활성화됨
-2. 현재 도메인이 카카오 개발자 콘솔에 등록되지 않음
+2. 현재 도메인이 카카오 개발자 콘솔에 정확히 등록되지 않음
+   - 등록된 도메인: ${currentOrigin} (정확히 일치해야 함)
+   - http와 https는 별도로 등록 필요
+   - 포트 번호가 있으면 포함해서 등록
 3. 네트워크 연결 문제
 
 해결 방법:
 - https://developers.kakao.com 접속
 - 내 애플리케이션 → 앱 설정 → 플랫폼
-- Web 플랫폼에 현재 도메인 추가
-  예: localhost:3001, *.vercel.app, 실제 배포 도메인`;
+- Web 플랫폼에 다음 도메인을 정확히 추가:
+  ${currentOrigin}
+  ${currentDomain}
+  ${window.location.protocol}//${currentDomain}${window.location.port ? ':' + window.location.port : ''}`;
           reject(new Error(errorMsg));
         };
 
