@@ -29,22 +29,24 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
           return;
         }
 
-        // 이미 스크립트 태그가 있으면 기다림
+        // HTML에서 이미 스크립트가 로드되었는지 확인
         const existingScript = document.querySelector('script[src*="dapi.kakao.com"]');
         if (existingScript) {
+          console.log('HTML에서 카카오맵 스크립트 발견, 로드 대기 중...');
+          let attempts = 0;
+          const maxAttempts = 100; // 10초
           const checkInterval = setInterval(() => {
+            attempts++;
             if (window.kakao && window.kakao.maps) {
               clearInterval(checkInterval);
+              console.log('카카오맵 API 로드 완료 (HTML 스크립트)');
               resolve();
+            } else if (attempts >= maxAttempts) {
+              clearInterval(checkInterval);
+              console.error('카카오맵 API 로드 타임아웃');
+              reject(new Error('카카오맵 스크립트는 로드되었지만 API가 초기화되지 않았습니다. API 키와 도메인 설정을 확인해주세요.'));
             }
           }, 100);
-
-          setTimeout(() => {
-            clearInterval(checkInterval);
-            if (!window.kakao) {
-              reject(new Error('카카오맵 스크립트 로드 타임아웃'));
-            }
-          }, 10000);
           return;
         }
 
