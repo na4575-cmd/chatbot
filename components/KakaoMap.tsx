@@ -7,6 +7,7 @@ interface KakaoMapProps {
 declare global {
   interface Window {
     kakao: any;
+    kakaoMapLoaded?: boolean;
   }
 }
 
@@ -16,15 +17,23 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
   const markerRef = useRef<any>(null);
   const psRef = useRef<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 카카오맵 API 로드 확인
+    // 카카오맵 API 로드 확인 함수
     const checkKakaoLoaded = () => {
-      if (window.kakao && window.kakao.maps) {
-        setIsLoaded(true);
-        return true;
+      try {
+        if (window.kakao && window.kakao.maps && window.kakao.maps.Map) {
+          console.log('카카오맵 API 로드 확인됨');
+          setIsLoaded(true);
+          setError(null);
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.error('카카오맵 API 확인 중 오류:', e);
+        return false;
       }
-      return false;
     };
 
     // 즉시 확인
@@ -32,15 +41,34 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
       return;
     }
 
-    // 주기적으로 확인 (최대 5초)
+    // 스크립트 로드 완료 이벤트 확인
+    if (window.kakaoMapLoaded) {
+      // 약간의 지연 후 다시 확인 (스크립트는 로드되었지만 API가 아직 준비되지 않았을 수 있음)
+      setTimeout(() => {
+        if (!checkKakaoLoaded()) {
+          // 1초 후에도 안 되면 강제로 시도
+          setTimeout(() => {
+            if (window.kakao && window.kakao.maps) {
+              setIsLoaded(true);
+            } else {
+              setError('카카오맵 API를 로드할 수 없습니다. API 키와 도메인 설정을 확인해주세요.');
+            }
+          }, 1000);
+        }
+      }, 100);
+      return;
+    }
+
+    // 주기적으로 확인 (최대 10초)
     let attempts = 0;
-    const maxAttempts = 50;
+    const maxAttempts = 100;
     const interval = setInterval(() => {
       attempts++;
       if (checkKakaoLoaded() || attempts >= maxAttempts) {
         clearInterval(interval);
-        if (attempts >= maxAttempts) {
-          console.error('Kakao Maps API 로드 실패');
+        if (attempts >= maxAttempts && !window.kakao) {
+          console.error('Kakao Maps API 로드 실패: 최대 재시도 횟수 초과');
+          setError('카카오맵을 로드할 수 없습니다. 네트워크 연결과 API 키를 확인해주세요.');
         }
       }
     }, 100);
@@ -70,8 +98,10 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
         mapRef.current = new maps.Map(mapContainer.current, options);
         psRef.current = new maps.services.Places();
         console.log('카카오맵 초기화 완료');
-      } catch (error) {
+        setError(null);
+      } catch (error: any) {
         console.error('카카오맵 초기화 실패:', error);
+        setError(`지도 초기화 실패: ${error.message || '알 수 없는 오류'}`);
       }
     }
 
@@ -128,15 +158,37 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ query }) => {
         backgroundColor: '#1a1a1a',
       }}
     >
-      {!isLoaded && (
+      {!isLoaded && !error && (
         <div style={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           height: '100%',
           color: '#fff',
+          gap: '10px',
         }}>
-          지도 로딩 중...
+          <div>지도 로딩 중...</div>
+          <div style={{ fontSize: '12px', color: '#888' }}>카카오맵 API를 불러오는 중입니다</div>
+        </div>
+      )}
+      {error && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          color: '#ff4444',
+          padding: '20px',
+          textAlign: 'center',
+          gap: '10px',
+        }}>
+          <div style={{ fontSize: '16px', fontWeight: 'bold' }}>지도 로드 실패</div>
+          <div style={{ fontSize: '12px', color: '#aaa' }}>{error}</div>
+          <div style={{ fontSize: '11px', color: '#666', marginTop: '10px' }}>
+            카카오 개발자 콘솔에서 API 키와 도메인 설정을 확인해주세요.
+          </div>
         </div>
       )}
     </div>
